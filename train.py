@@ -1,27 +1,16 @@
-# 训练参数+日志记录
+# 读取训练参数+初始化日志记录
+import sys
+import json
 import swanlab
 
-hidden_size = 256
-output_size = 1
-num_layers = 1
-lr = 0.001
-num_epochs = 5
-batch_size = 64
-output_path = "output"
-report_interval = 10
+args_file = "baseline.json"
+if len(sys.argv) > 1:
+    args_file = sys.argv[1]
 
-swanlab.init(
-    project="Ascend_IMDB_CLS",
-    experiment_name="baseline",
-    config={
-        "hidden_size": hidden_size,
-        "num_layers": num_layers,
-        "lr": lr,
-        "num_epochs": num_epochs,
-        "batch_size": batch_size,
-        "report_interval": report_interval,
-    },
-)
+with open(args_file, "r") as f:
+    args = json.load(f)
+
+swanlab.init(project="Ascend_IMDB_CLS", experiment_name=args["exp_name"], config=args)
 
 
 # 构造数据集
@@ -106,8 +95,8 @@ print(f"TRAIN SET SIZE: {len(imdb_train)}")
 print(f"VALID SET SIZE: {len(imdb_valid)}")
 print(f"TEST SET SIZE: {len(imdb_test)}")
 
-imdb_train = imdb_train.batch(batch_size, drop_remainder=True)
-imdb_valid = imdb_valid.batch(batch_size, drop_remainder=True)
+imdb_train = imdb_train.batch(args["batch_size"], drop_remainder=True)
+imdb_valid = imdb_valid.batch(args["batch_size"], drop_remainder=True)
 
 
 # LSTM分类器实现
@@ -146,12 +135,16 @@ class LSTM_CLS(nn.Cell):
 
 
 model = LSTM_CLS(
-    embeddings, hidden_size, output_size, num_layers, vocab.tokens_to_ids("<pad>")
+    embeddings,
+    args["hidden_size"],
+    args["output_size"],
+    args["num_layers"],
+    vocab.tokens_to_ids("<pad>"),
 )
 
 # 损失函数与优化器
 loss_fn = nn.BCEWithLogitsLoss(reduction="mean")
-optimizer = nn.Adam(model.trainable_params(), learning_rate=lr)
+optimizer = nn.Adam(model.trainable_params(), learning_rate=args["lr"])
 
 # 训练过程实现
 from tqdm import tqdm
@@ -180,7 +173,7 @@ def train_one_epoch(model, train_dataset, epoch=0):
         loss = train_step(*i)
         step_total += 1
         loss_item = loss.item()
-        if step_total % report_interval == 1:
+        if step_total % args["report_interval"] == 1:
             swanlab.log({"epoch": epoch, "step": step_total, "loss": loss_item})
             print(
                 f"[train epoch-{epoch:2d} step-{step_total:4d}/{total:4d}] loss:{loss_item:.4f}"
@@ -222,9 +215,9 @@ def evaluate(model, test_dataset, criterion, epoch=0, mode="eval"):
 
 # 开启训练
 best_valid_loss = float("inf")
-ckpt_file_name = os.path.join(output_path, "sentiment-analysis.ckpt")
+ckpt_file_name = os.path.join("output", args["exp_name"], "sentiment-analysis.ckpt")
 
-for epoch in range(num_epochs):
+for epoch in range(args["num_epochs"]):
     train_one_epoch(model, imdb_train, epoch)
     valid_loss, _ = evaluate(model, imdb_valid, loss_fn, epoch)
 

@@ -48,4 +48,4 @@ unzip embedding/glove.6B.zip -d embedding/
 python train.py
 ```
 
-可以看到
+可以看到模型正常训练
