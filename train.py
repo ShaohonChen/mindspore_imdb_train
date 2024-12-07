@@ -1,20 +1,30 @@
 # 读取训练参数+初始化日志记录
 import sys
 import json
+import mindspore as ms
 import swanlab
 
 args_file = "baseline.json"
 if len(sys.argv) > 1:
     args_file = sys.argv[1]
-
 with open(args_file, "r") as f:
     args = json.load(f)
+if len(sys.argv) > 2:
+    device_id = sys.argv[2]
+    if device_id == "CPU":
+        ms.set_context(device_target="CPU")
+        args["device"] = device_id
+    else:
+        ms.set_context(device_target="Ascend", device_id=int(device_id))
+        args["device"] = "Ascend:" + str(device_id)
+
 
 exp_name = args_file[:-5]
 swanlab.init(project="Ascend_IMDB_CLS", experiment_name=exp_name, config=args)
 
 
 # 构造数据集
+
 import os
 import mindspore.dataset as ds
 
@@ -149,6 +159,7 @@ optimizer = nn.Adam(model.trainable_params(), learning_rate=args["lr"])
 
 # 训练过程实现
 from tqdm import tqdm
+import time
 
 
 def forward_fn(data, label):
@@ -170,14 +181,25 @@ def train_one_epoch(model, train_dataset, epoch=0):
     model.set_train()
     total = train_dataset.get_dataset_size()
     step_total = 0
+    last_time = time.time()
     for i in train_dataset.create_tuple_iterator():
         loss = train_step(*i)
         step_total += 1
         loss_item = loss.item()
         if step_total % args["report_interval"] == 1:
-            swanlab.log({"epoch": epoch, "step": step_total, "loss": loss_item})
+            now_time = time.time()
+            per_batch_time = (now_time - last_time) / args["report_interval"]
+            last_time = now_time
+            swanlab.log(
+                {
+                    "train/epoch": epoch,
+                    "train/step": step_total,
+                    "train/loss": loss_item,
+                    "train/per_batch_time(s)": per_batch_time,
+                }
+            )
             print(
-                f"[train epoch-{epoch:2d} step-{step_total:4d}/{total:4d}] loss:{loss_item:.4f}"
+                f"[train epoch-{epoch:2d} step-{step_total:4d}/{total:4d}] loss:{loss_item:.4f} use_time:{per_batch_time:10.4f}s"
             )
 
 
@@ -190,6 +212,7 @@ def binary_accuracy(preds, y):
 
 
 def evaluate(model, test_dataset, criterion, epoch=0, mode="eval"):
+    last_time = time.time()
     total = test_dataset.get_dataset_size()
     epoch_loss = 0
     epoch_acc = 0
@@ -203,20 +226,27 @@ def evaluate(model, test_dataset, criterion, epoch=0, mode="eval"):
 
     final_loss = float(epoch_loss / total)
     final_acc = float(epoch_acc / total)
+    use_time = time.time() - last_time
     swanlab.log(
         {
-            "{mode}/loss": final_loss,
-            "{mode}/acc": final_acc,
+            f"{mode}/loss": final_loss,
+            f"{mode}/acc": final_acc,
+            f"{mode}/use_time": use_time,
         }
     )
-    print(f"[{mode} epoch-{epoch:2d} loss:{final_loss:.4f} acc:{final_acc*100:.2f}%")
+    print(
+        f"[{mode} epoch-{epoch:2d} loss:{final_loss:.4f} acc:{final_acc*100:.2f}% use_time:{use_time:10.4f}s"
+    )
 
     return final_loss, final_acc
 
 
-# 开启训练
+# 开启训练=
 best_valid_loss = float("inf")
-ckpt_file_name = os.path.join("output", exp_name, "sentiment-analysis.ckpt")
+save_path = os.path.join("output", exp_name)
+os.makedirs(save_path, exist_ok=True)
+ckpt_file_name = os.path.join(save_path, "sentiment-analysis.ckpt")
+
 
 for epoch in range(args["num_epochs"]):
     train_one_epoch(model, imdb_train, epoch)
