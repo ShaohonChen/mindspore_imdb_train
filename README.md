@@ -21,6 +21,14 @@ LSTM（Long Short-Term Memory）是一种改进的循环神经网络，专为处
 
 ## 环境安装
 
+### 克隆项目
+
+附上[github项目链接](https://github.com/ShaohonChen/mindspore_imdb_train.git)和下载命令
+
+```bash
+git clone https://github.com/ShaohonChen/mindspore_imdb_train.git
+```
+
 ### CPU环境安装
 
 可以在CPU环境下安装MindSpore，虽然看起来没有Pytorch那么好用，但实际上文档还是写的很细的，真的很细，看得出华为工程师的严谨orz。配合sheng腾卡使用的话是非常有潜力的框架（MAC死活打不出sheng字）。
