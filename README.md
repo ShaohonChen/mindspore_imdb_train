@@ -8,7 +8,7 @@
 
 ## 环境安装
 
-由于华为Ascend环境安装较为复杂，建议参考[///](///)教程完成MindSpore环境安装
+由于华为Ascend环境安装较为复杂，建议参考[MindSpore安装教程和踩坑记录](///)教程完成MindSpore环境安装
 
 也附上官方安装教程链接[mindspore官方安装教程](https://www.mindspore.cn/install)，注意本教程使用的是[Mindspore 2.4.1](https://www.mindspore.cn/versions#2.4.1)，建议环境与本教程保持一致。
 
@@ -16,7 +16,7 @@
 
 其他依赖环境安装方法：
 
-```bash
+```bash 
 pip install -r requirements.txt
 ```
 
@@ -48,4 +48,27 @@ unzip embedding/glove.6B.zip -d embedding/
 python train.py
 ```
 
-可以看到模型正常训练
+可是这
+
+> 如果提示登录swanlab，可以参考[如何登录SwanLab](https://docs.swanlab.cn/guide_cloud/general/quick-start.html#_2-%E7%99%BB%E5%BD%95%E8%B4%A6%E5%8F%B7)，这样将能够使用**云上看版**随时查看训练过程与结果。
+
+完成设置便可以在云上实时看到训练进展，我的实验记录可参考[完整实验记录](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/charts)
+
+![log_img](docs/log_img.png)
+
+并且附上其他脚本与在线实验记录：
+
+| 内容  | 训练命令  | 实验log  |
+|--------|--------|--------|
+| 基线 | `python train.py configs/baseline.json` | [log](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/runs/bbuwb3291pxkoyi00zu16/chart) |
+| CPU运行 | `python train.py configs/baseline.json CPU` | [log](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/runs/htlcflrzpozfcds5o9q93/chart) |
+| 双层LSTM | `python train.py configs/two_layer.json` | [log](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/runs/pywgvlga53wozdb9c2toz/chart) |
+| 小batch数 | `python train.py configs/small_batch.json` | [log](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/runs/pywgvlga53wozdb9c2toz/chart) |
+| 隐藏层加大 | `python train.py configs/large_hs.json` | [log](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/runs/cx0implu0xoxffi57173c/chart) |
+| 学习率加大 | `python train.py configs/large_hs.json` | [log](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/runs/tsyxib42islmlsay1ogna/chart) |
+
+相关超参数和最终结果可在[图标视图查看](https://swanlab.cn/@ShaohonChen/Ascend_IMDB_CLS/overview)
+
+![log_table](docs/log_table.png)
+
+> PS: 观察了下日志，发现还是训练量不足，应该增大些训练量（40-50epoch比较合适）
