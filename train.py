@@ -10,7 +10,8 @@ if len(sys.argv) > 1:
 with open(args_file, "r") as f:
     args = json.load(f)
 
-swanlab.init(project="Ascend_IMDB_CLS", experiment_name=args["exp_name"], config=args)
+exp_name = args_file[:-5]
+swanlab.init(project="Ascend_IMDB_CLS", experiment_name=exp_name, config=args)
 
 
 # 构造数据集
