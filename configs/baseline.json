@@ -3,7 +3,7 @@
     "output_size": 1,
     "num_layers": 2,
     "lr": 0.001,
-    "num_epochs": 5,
+    "num_epochs": 10,
     "batch_size": 64,
     "report_interval": 10
 }

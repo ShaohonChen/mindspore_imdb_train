@@ -7,7 +7,7 @@ import swanlab
 args_file = "baseline.json"
 if len(sys.argv) > 1:
     args_file = sys.argv[1]
-with open(args_file, "r") as f:
+with open(os.path.join("configs", args_file), "r") as f:
     args = json.load(f)
 if len(sys.argv) > 2:
     device_id = sys.argv[2]
