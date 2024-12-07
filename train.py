@@ -1,13 +1,14 @@
 # 读取训练参数+初始化日志记录
+import os
 import sys
 import json
 import mindspore as ms
 import swanlab
 
-args_file = "baseline.json"
+args_file = "configs/baseline.json"
 if len(sys.argv) > 1:
     args_file = sys.argv[1]
-with open(os.path.join("configs", args_file), "r") as f:
+with open(args_file, "r") as f:
     args = json.load(f)
 if len(sys.argv) > 2:
     device_id = sys.argv[2]
@@ -19,13 +20,11 @@ if len(sys.argv) > 2:
         args["device"] = "Ascend:" + str(device_id)
 
 
-exp_name = args_file[:-5]
+exp_name = os.path.splitext(os.path.basename(args_file))[0]
 swanlab.init(project="Ascend_IMDB_CLS", experiment_name=exp_name, config=args)
 
 
 # 构造数据集
-
-import os
 import mindspore.dataset as ds
 
 
@@ -60,8 +59,6 @@ imdb_test = ds.GeneratorDataset(
 )
 
 # 构造embedding词表
-import os
-
 import numpy as np
 
 
