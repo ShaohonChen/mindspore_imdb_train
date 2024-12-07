@@ -216,7 +216,7 @@ def evaluate(model, test_dataset, criterion, epoch=0, mode="eval"):
 
 # 开启训练
 best_valid_loss = float("inf")
-ckpt_file_name = os.path.join("output", args["exp_name"], "sentiment-analysis.ckpt")
+ckpt_file_name = os.path.join("output", exp_name, "sentiment-analysis.ckpt")
 
 for epoch in range(args["num_epochs"]):
     train_one_epoch(model, imdb_train, epoch)
